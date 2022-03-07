@@ -533,6 +533,19 @@ std::vector<Shape> compute_shape_clamp_min(const at::Tensor & self, const at::Sc
   return {Shape(self.scalar_type(), self.sizes().vec())};
 }
 
+std::vector<Shape> compute_shape_repeat(const at::Tensor & self, at::IntArrayRef repeats) {
+  CHECK_GE(repeats.size(), self.dim());
+  int64_t num_new_dimensions = repeats.size() - self.dim();
+  std::vector<int64_t> padded_size(num_new_dimensions, 1);
+  padded_size.insert(padded_size.end(), self.sizes().begin(),
+                     self.sizes().end());
+  std::vector<int64_t> target_size(repeats.size());
+  for (const auto idx : c10::irange(repeats.size())) {
+    target_size[idx] = padded_size[idx] * repeats[idx];
+  }
+  return {Shape(self.scalar_type(), target_size)};
+}
+
 // Restore unused-parameters warnings
 #pragma GCC diagnostic pop
 
